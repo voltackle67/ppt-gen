@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Presentation - Auto-Generate PowerPoint</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>Text to Presentation Generator</h1>
+            <p class="app-description">Transform your text, markdown, or prose into professionally formatted PowerPoint presentations using your own templates.</p>
+        </header>
+
+        <!-- Main Application -->
+        <main class="app-main">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="section-header">
+                    <h2>Step 1: Input Your Content</h2>
+                    <p>Paste your text, markdown, or long-form content below</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="textContent" class="form-label">Your Text Content *</label>
+                    <textarea 
+                        id="textContent" 
+                        class="form-control text-input" 
+                        placeholder="Paste your text, markdown, or prose here..."
+                        rows="12"
+                        required
+                    ></textarea>
+                    <div class="input-info">
+                        <span class="char-count">0 characters</span>
+                        <button type="button" class="btn-link" id="loadSample">Load Sample Text</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="guidance" class="form-label">Presentation Guidance (Optional)</label>
+                    <input 
+                        type="text" 
+                        id="guidance" 
+                        class="form-control"
+                        placeholder="e.g., 'Create an investor pitch deck' or 'Make it suitable for executive presentation'"
+                    >
+                    <div class="guidance-examples">
+                        <span class="example-label">Examples:</span>
+                        <div class="examples-grid">
+                            <button type="button" class="example-btn" data-example="Create an investor pitch deck">Investor Pitch</button>
+                            <button type="button" class="example-btn" data-example="Make it suitable for executive presentation">Executive Summary</button>
+                            <button type="button" class="example-btn" data-example="Design for educational classroom use">Educational</button>
+                            <button type="button" class="example-btn" data-example="Focus on technical audience">Technical</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- API Configuration Section -->
+            <section class="api-section">
+                <div class="section-header">
+                    <h2>Step 2: AI Provider Configuration</h2>
+                    <p>Select your AI provider and enter your API key</p>
+                </div>
+
+                <div class="api-config">
+                    <div class="form-group">
+                        <label for="provider" class="form-label">AI Provider *</label>
+                        <select id="provider" class="form-control" required>
+                            <option value="">Select AI Provider</option>
+                            <option value="openai">OpenAI (GPT-4, GPT-3.5)</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="gemini">Google Gemini</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apiKey" class="form-label">API Key *</label>
+                        <input 
+                            type="password" 
+                            id="apiKey" 
+                            class="form-control"
+                            placeholder="Enter your API key (never stored or logged)"
+                            required
+                        >
+                        <div class="api-key-info">
+                            <small class="text-secondary">
+                                <span id="apiKeyFormat">Your API key will be used only for this session</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Template Upload Section -->
+            <section class="upload-section">
+                <div class="section-header">
+                    <h2>Step 3: Upload Your Template</h2>
+                    <p>Upload a PowerPoint template (.pptx or .potx) to style your presentation</p>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <div class="upload-icon">📎</div>
+                        <h3>Drag & Drop Your Template</h3>
+                        <p>Or click to browse files</p>
+                        <div class="upload-requirements">
+                            <span>Supports: .pptx, .potx files</span>
+                            <span>Max size: 50MB</span>
+                        </div>
+                        <input type="file" id="templateFile" accept=".pptx,.potx" hidden>
+                    </div>
+                </div>
+
+                <div class="uploaded-file" id="uploadedFile" style="display: none;">
+                    <div class="file-info">
+                        <div class="file-icon">📋</div>
+                        <div class="file-details">
+                            <div class="file-name"></div>
+                            <div class="file-size"></div>
+                        </div>
+                        <button type="button" class="btn-remove" id="removeFile">✕</button>
+                    </div>
+                </div>
+
+                <div class="template-analysis" id="templateAnalysis" style="display: none;">
+                    <h4>Template Analysis</h4>
+                    <div class="analysis-content">
+                        <div class="analysis-item">
+                            <span class="analysis-label">Detected Colors:</span>
+                            <div class="color-palette" id="colorPalette"></div>
+                        </div>
+                        <div class="analysis-item">
+                            <span class="analysis-label">Primary Font:</span>
+                            <span class="analysis-value" id="primaryFont">Calibri</span>
+                        </div>
+                        <div class="analysis-item">
+                            <span class="analysis-label">Layouts Found:</span>
+                            <span class="analysis-value" id="layoutsFound">5 layouts</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Generation Section -->
+            <section class="generate-section">
+                <div class="section-header">
+                    <h2>Step 4: Generate Your Presentation</h2>
+                    <p>Process your content and create a styled PowerPoint presentation</p>
+                </div>
+
+                <div class="generation-controls">
+                    <button type="button" class="btn btn--primary btn--lg" id="generateBtn" disabled>
+                        Generate Presentation
+                    </button>
+                </div>
+
+                <!-- Progress Section -->
+                <div class="progress-section" id="progressSection" style="display: none;">
+                    <div class="progress-header">
+                        <h3>Generating Your Presentation</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="progress-step" data-step="0">
+                            <div class="step-indicator"></div>
+                            <span>Validating inputs</span>
+                        </div>
+                        <div class="progress-step" data-step="1">
+                            <div class="step-indicator"></div>
+                            <span>Analyzing template</span>
+                        </div>
+                        <div class="progress-step" data-step="2">
+                            <div class="step-indicator"></div>
+                            <span>Processing text with AI</span>
+                        </div>
+                        <div class="progress-step" data-step="3">
+                            <div class="step-indicator"></div>
+                            <span>Generating slide structure</span>
+                        </div>
+                        <div class="progress-step" data-step="4">
+                            <div class="step-indicator"></div>
+                            <span>Applying template styling</span>
+                        </div>
+                        <div class="progress-step" data-step="5">
+                            <div class="step-indicator"></div>
+                            <span>Creating PowerPoint file</span>
+                        </div>
+                        <div class="progress-step" data-step="6">
+                            <div class="step-indicator"></div>
+                            <span>Preparing download</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-section" id="resultsSection" style="display: none;">
+                    <div class="results-header">
+                        <h3>✅ Presentation Generated Successfully!</h3>
+                        <p>Your presentation has been created with <span id="slideCount">0</span> slides</p>
+                    </div>
+                    
+                    <div class="results-actions">
+                        <button type="button" class="btn btn--primary btn--lg" id="downloadBtn">
+                            Download Presentation
+                        </button>
+                        <button type="button" class="btn btn--outline" id="generateAnother">
+                            Generate Another
+                        </button>
+                    </div>
+
+                    <div class="slides-preview" id="slidesPreview">
+                        <h4>Slide Overview</h4>
+                        <div class="slides-list" id="slidesList">
+                            <!-- Slides will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Error Modal -->
+        <div class="modal hidden" id="errorModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Error</h3>
+                    <button type="button" class="btn-close" id="closeError">✕</button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorMessage">An error occurred while processing your request.</p>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn--primary" id="closeErrorBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p>&copy; 2025 Text to Presentation Generator. Your API keys are never stored or logged.</p>
+                <div class="footer-links">
+                    <a href="#" target="_blank">GitHub Repository</a>
+                    <a href="#" target="_blank">Documentation</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
